@@ -2,28 +2,27 @@ package com.ortecfinance.tasklist;
 
 import com.ortecfinance.tasklist.commands.Commands;
 import com.ortecfinance.tasklist.commands.SubCommand;
-import com.ortecfinance.tasklist.console.ConsoleInputOutput;
-import com.ortecfinance.tasklist.models.Project;
-import com.ortecfinance.tasklist.models.Task;
+import com.ortecfinance.tasklist.console.ConsoleOutput;
+import com.ortecfinance.tasklist.services.TaskService;
 import com.ortecfinance.tasklist.storage.ProjectsStorage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.time.LocalDate;
 import java.util.*;
 
-import static com.ortecfinance.tasklist.utils.DeadlineUtils.parseString;
-
+@Service
+@RequiredArgsConstructor
 public final class TaskList implements Runnable {
 
     private static final String QUIT = "quit";
-    private final ProjectsStorage projectsStorage = new ProjectsStorage();
-    private static ConsoleInputOutput consoleInputOutput;
-
-    private final BufferedReader in;
-    private final PrintWriter out;
+    private final TaskService taskService;
+    private final ConsoleOutput consoleOutput;
+    private BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+    private PrintWriter out = new PrintWriter(System.out);
 
     public static void startConsole() {
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -34,7 +33,9 @@ public final class TaskList implements Runnable {
     public TaskList(BufferedReader reader, PrintWriter writer) {
         this.in = reader;
         this.out = writer;
-        consoleInputOutput = new ConsoleInputOutput(in, out);
+        consoleOutput = new ConsoleOutput(out);
+        ProjectsStorage projectsStorage = new ProjectsStorage();
+        taskService = new TaskService(projectsStorage, consoleOutput);
     }
 
     public void run() {
@@ -63,27 +64,21 @@ public final class TaskList implements Runnable {
                 .fromString(commandString)
                 .ifPresentOrElse(
                         cmd -> handleCommand(cmd, commandRest),
-                        () -> consoleInputOutput.error(commandString)
+                        () -> consoleOutput.error(commandString)
                 );
     }
 
     private void handleCommand(Commands cmd, String[] commandRest) {
         switch (cmd) {
-            case SHOW -> show();
+            case SHOW -> taskService.showAllProjects();
             case ADD -> add(commandRest[1]);
-            case CHECK -> check(commandRest[1]);
-            case UNCHECK -> uncheck(commandRest[1]);
-            case HELP -> consoleInputOutput.help();
-            case DEADLINE -> deadline(commandRest[1]);
-            case TODAY -> today();
-            case VIEW_BY_DEADLINE -> viewByDeadline();
+            case CHECK -> taskService.checkTask(commandRest[1]);
+            case UNCHECK -> taskService.uncheckTask(commandRest[1]);
+            case HELP -> consoleOutput.help();
+            case DEADLINE -> taskService.updateDeadlineInTask(commandRest[1]);
+            case TODAY -> taskService.viewTasksForToday();
+            case VIEW_BY_DEADLINE -> taskService.viewTasksByDeadline();
         }
-    }
-
-
-    private void show() {
-        Collection<Project> projects = projectsStorage.getAllProjects().values();
-        consoleInputOutput.showProjectsAndTasks(projects);
     }
 
     private void add(String commandLine) {
@@ -94,72 +89,17 @@ public final class TaskList implements Runnable {
                 .fromString(subcommandString)
                 .ifPresentOrElse(
                         sc -> handleSubcommand(sc, subcommandRest[1]),
-                        () -> consoleInputOutput.error(subcommandString)
+                        () -> consoleOutput.error(subcommandString)
                 );
     }
 
     private void handleSubcommand(SubCommand sc, String rest) {
         switch (sc) {
-            case PROJECT -> addProject(rest);
+            case PROJECT -> taskService.addProject(rest);
             case TASK -> {
                 String[] projectTask = rest.split(" ", 2);
-                addTask(projectTask[0], projectTask[1]);
+                taskService.addTask(projectTask[0], projectTask[1]);
             }
         }
-    }
-
-
-    private void addProject(String name) {
-        projectsStorage.addProject(name);
-    }
-
-    private void addTask(String project, String taskDescription) {
-        Optional<Project> updatedProject = projectsStorage.addTaskToProject(project, taskDescription);
-        if (updatedProject.isEmpty()) {
-            consoleInputOutput.printProjectNotFoundByName(project);
-        }
-    }
-
-    private void check(String idString) {
-        updateDone(idString, true);
-    }
-
-    private void uncheck(String idString) {
-        updateDone(idString, false);
-    }
-
-    private void updateDone(String idString, boolean done) {
-        long id = Long.parseLong(idString);
-        Optional<Task> updatedTask = projectsStorage.updateDoneValueInTask(id, done);
-        if (updatedTask.isEmpty()) {
-            consoleInputOutput.printTaskNotFoundById(id);
-        }
-    }
-
-    private void deadline(String commandLine) {
-        String[] subcommandRest = commandLine.split(" ", 2);
-        String idString = subcommandRest[0];
-        String dateString = subcommandRest[1];
-
-        long taskId = Long.parseLong(idString);
-        LocalDate deadline = parseString(dateString);
-
-        Optional<Task> updatedTask =  projectsStorage.updateDeadlineValueInTask(taskId, deadline);
-        if (updatedTask.isEmpty()) {
-            consoleInputOutput.printTaskNotFoundById(taskId);
-        }
-    }
-
-    private void today() {
-        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
-        consoleInputOutput.showProjectsAndTasksForToday(allTasks, deadlinesWithTaskIds);
-    }
-
-    private void viewByDeadline() {
-        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
-        Set<Long> tasksWithoutDeadline = projectsStorage.getAllTasksIdsWithoutDeadlinesCache();
-        consoleInputOutput.showProjectsAndTasksBasedOnDeadline(allTasks, deadlinesWithTaskIds, tasksWithoutDeadline);
     }
 }

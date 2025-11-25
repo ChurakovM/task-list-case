@@ -3,21 +3,23 @@ package com.ortecfinance.tasklist.console;
 import com.ortecfinance.tasklist.commands.Commands;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.*;
 
 import static com.ortecfinance.tasklist.utils.DeadlineUtils.getDeadlineLabel;
+import static com.ortecfinance.tasklist.utils.TasksDataUtils.groupTasksByProject;
 
-public class ConsoleInputOutput {
+@Component
+public class ConsoleOutput {
 
-    private final BufferedReader in;
     private final PrintWriter out;
 
-    public ConsoleInputOutput(BufferedReader in, PrintWriter out) {
-        this.in = in;
+    @Autowired
+    public ConsoleOutput(PrintWriter out) {
         this.out = out;
     }
 
@@ -103,21 +105,6 @@ public class ConsoleInputOutput {
             Map<String, List<Task>> tasksByProject = groupTasksByProject(tasksWithoutDeadline, allTasks);
             printTasksByProject(tasksByProject);
         }
-    }
-
-    private Map<String, List<Task>> groupTasksByProject(Collection<Long> taskIds, Map<Long, Task> allTasks) {
-        Map<String, List<Task>> tasksByProject = new LinkedHashMap<>();
-
-        for (Long taskId : taskIds) {
-            Task task = allTasks.get(taskId);
-            if (task != null) {
-                tasksByProject
-                        .computeIfAbsent(task.getProject().getName(), k -> new ArrayList<>())
-                        .add(task);
-            }
-        }
-
-        return tasksByProject;
     }
 
     private void printTasksByProject(Map<String, List<Task>> tasksByProject) {

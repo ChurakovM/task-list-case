@@ -3,10 +3,12 @@ package com.ortecfinance.tasklist.storage;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
 import lombok.Getter;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
+@Service
 public class ProjectsStorage {
 
     @Getter
