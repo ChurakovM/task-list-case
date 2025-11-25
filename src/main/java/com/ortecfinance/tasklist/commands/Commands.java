@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum Commands {
 
     SHOW("show", "show"),
-    ADD("add", "add project <name> \nadd task <project> <description>"),
+    ADD("add", "add project <name> \n  add task <project> <description>"),
     CHECK("check", "check <task ID>"),
     UNCHECK("uncheck", "uncheck <task ID>"),
     HELP("help", "help"),
