@@ -120,18 +120,6 @@ public class ProjectsStorage {
         }
     }
 
-    private void updateCacheWithDeadlines(LocalDate deadline, long taskId) {
-        List<Long> tasks = deadlinesWithTaskIds.getOrDefault(deadline, new ArrayList<>());
-        tasks.add(taskId);
-        deadlinesWithTaskIds.put(deadline, tasks);
-    }
-
-    private void removeTaskFromDeadlineCache(long taskId) {
-        for (List<Long> taskList : deadlinesWithTaskIds.values()) {
-            taskList.remove(taskId);
-        }
-    }
-
     private long nextTaskId() {
         return ++lastTaskId;
     }
