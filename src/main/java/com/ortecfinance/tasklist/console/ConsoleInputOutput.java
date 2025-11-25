@@ -1,11 +1,15 @@
 package com.ortecfinance.tasklist.console;
 
+import com.ortecfinance.tasklist.commands.Commands;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
-import java.util.Collection;
+import java.time.LocalDate;
+import java.util.*;
+
+import static com.ortecfinance.tasklist.utils.DeadlineUtils.getDeadlineLabel;
 
 public class ConsoleInputOutput {
 
@@ -19,12 +23,9 @@ public class ConsoleInputOutput {
 
     public void help() {
         out.println("Commands:");
-        out.println("  show");
-        out.println("  add project <project name>");
-        out.println("  add task <project name> <task description>");
-        out.println("  check <task ID>");
-        out.println("  uncheck <task ID>");
-        out.println("  deadline <task ID> <date DD-MM-YYYY>");
+        for (Commands cmd : Commands.values()) {
+            out.println("  " + cmd.getHelpText());
+        }
         out.println();
     }
 
@@ -47,9 +48,84 @@ public class ConsoleInputOutput {
         for (Project project : projects) {
             out.println(project.getName());
             for (Task task : project.getTasks()) {
-                out.printf("    [%c] %d: %s%n", (task.isDone() ? 'x' : ' '), task.getId(), task.getDescription());
+                String deadlineLabel = getDeadlineLabel(task.getDeadline());
+                out.printf(
+                        "    [%c] %d: %s (deadline: %s)%n",
+                        (task.isDone() ? 'x' : ' '),
+                        task.getId(),
+                        task.getDescription(),
+                        deadlineLabel
+                );
             }
             out.println();
+        }
+    }
+
+    public void showProjectsAndTasksForToday(Map<Long, Task> allTasks,
+                                             Map<LocalDate, List<Long>> deadlinesWithTaskIds) {
+
+        LocalDate today = LocalDate.now();
+
+        // Check if there are tasks with today's deadline
+        List<Long> taskIdsForToday = deadlinesWithTaskIds.get(today);
+        if (taskIdsForToday == null || taskIdsForToday.isEmpty()) {
+            out.println("No tasks for today.");
+            return;
+        }
+
+        Map<String, List<Task>> tasksByProject = groupTasksByProject(taskIdsForToday, allTasks);
+        printTasksByProject(tasksByProject);
+    }
+
+    public void showProjectsAndTasksBasedOnDeadline(Map<Long, Task> allTasks,
+                                                    Map<LocalDate, List<Long>> deadlinesWithTaskIds,
+                                                    List<Long> tasksWithoutDeadline) {
+        if (allTasks == null || allTasks.isEmpty()) {
+            out.println("No tasks in the system.");
+            return;
+        }
+
+        // Print all deadlines first
+        for (Map.Entry<LocalDate, List<Long>> entry : deadlinesWithTaskIds.entrySet()) {
+            LocalDate deadline = entry.getKey();
+            List<Long> taskIds = entry.getValue();
+
+            out.println(getDeadlineLabel(deadline));
+
+            Map<String, List<Task>> tasksByProject = groupTasksByProject(taskIds, allTasks);
+            printTasksByProject(tasksByProject);
+        }
+
+        // Print the rest of things without a deadline
+        if (!tasksWithoutDeadline.isEmpty()) {
+            out.println("No deadline:");
+
+            Map<String, List<Task>> tasksByProject = groupTasksByProject(tasksWithoutDeadline, allTasks);
+            printTasksByProject(tasksByProject);
+        }
+    }
+
+    private Map<String, List<Task>> groupTasksByProject(List<Long> taskIds, Map<Long, Task> allTasks) {
+        Map<String, List<Task>> tasksByProject = new LinkedHashMap<>();
+
+        for (Long taskId : taskIds) {
+            Task task = allTasks.get(taskId);
+            if (task != null) {
+                tasksByProject
+                        .computeIfAbsent(task.getProject().getName(), k -> new ArrayList<>())
+                        .add(task);
+            }
+        }
+
+        return tasksByProject;
+    }
+
+    private void printTasksByProject(Map<String, List<Task>> tasksByProject) {
+        for (Map.Entry<String, List<Task>> projectEntry : tasksByProject.entrySet()) {
+            out.println("    " + projectEntry.getKey() + ":");
+            for (Task task : projectEntry.getValue()) {
+                out.printf("        %d: %s%n", task.getId(), task.getDescription());
+            }
         }
     }
 }

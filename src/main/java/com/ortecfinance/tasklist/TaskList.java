@@ -13,7 +13,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import static com.ortecfinance.tasklist.utils.DeadlineUtils.parseString;
 
 public final class TaskList implements Runnable {
 
@@ -74,12 +78,14 @@ public final class TaskList implements Runnable {
             case UNCHECK -> uncheck(commandRest[1]);
             case HELP -> consoleInputOutput.help();
             case DEADLINE -> deadline(commandRest[1]);
+            case TODAY -> today();
+            case VIEW_BY_DEADLINE -> viewByDeadline();
         }
     }
 
 
     private void show() {
-        Collection<Project> projects = projectsStorage.getProjectsWithTasks().values();
+        Collection<Project> projects = projectsStorage.getAllProjects().values();
         consoleInputOutput.showProjectsAndTasks(projects);
     }
 
@@ -118,14 +124,14 @@ public final class TaskList implements Runnable {
     }
 
     private void check(String idString) {
-        setDone(idString, true);
+        updateDone(idString, true);
     }
 
     private void uncheck(String idString) {
-        setDone(idString, false);
+        updateDone(idString, false);
     }
 
-    private void setDone(String idString, boolean done) {
+    private void updateDone(String idString, boolean done) {
         long id = Long.parseLong(idString);
         Optional<Task> updatedTask = projectsStorage.updateDoneValueInTask(id, done);
         if (updatedTask.isEmpty()) {
@@ -139,11 +145,24 @@ public final class TaskList implements Runnable {
         String dateString = subcommandRest[1];
 
         long taskId = Long.parseLong(idString);
-        LocalDate deadline = LocalDate.parse(dateString);
+        LocalDate deadline = parseString(dateString);
 
         Optional<Task> updatedTask =  projectsStorage.updateDeadlineValueInTask(taskId, deadline);
         if (updatedTask.isEmpty()) {
             consoleInputOutput.printTaskNotFoundById(taskId);
         }
+    }
+
+    private void today() {
+        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIds();
+        consoleInputOutput.showProjectsAndTasksForToday(allTasks, deadlinesWithTaskIds);
+    }
+
+    private void viewByDeadline() {
+        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIds();
+        List<Long> tasksWithoutDeadline = projectsStorage.getAllTasksIdsWithoutDeadlines();
+        consoleInputOutput.showProjectsAndTasksBasedOnDeadline(allTasks, deadlinesWithTaskIds, tasksWithoutDeadline);
     }
 }

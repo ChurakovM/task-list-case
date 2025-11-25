@@ -7,17 +7,21 @@ import java.util.Optional;
 @Getter
 public enum Commands {
 
-    SHOW("show"),
-    ADD("add"),
-    CHECK("check"),
-    UNCHECK("uncheck"),
-    HELP("help"),
-    DEADLINE("deadline");
+    SHOW("show", "show"),
+    ADD("add", "add project <name> \nadd task <project> <description>"),
+    CHECK("check", "check <task ID>"),
+    UNCHECK("uncheck", "uncheck <task ID>"),
+    HELP("help", "help"),
+    DEADLINE("deadline", "deadline <task ID> <date DD-MM-YYYY>"),
+    TODAY("today", "today"),
+    VIEW_BY_DEADLINE("view-by-deadline", "view-by-deadline");
 
     private final String command;
+    private final String helpText;
 
-    Commands(String command) {
+    Commands(String command, String helpText) {
         this.command = command;
+        this.helpText = helpText;
     }
 
     public static Optional<Commands> fromString(String value) {

@@ -10,20 +10,26 @@ import java.util.*;
 public class ProjectsStorage {
 
     @Getter
-    private final Map<String, Project> projectsWithTasks = new LinkedHashMap<>();
-    private final Map<Long, Task> tasks = new LinkedHashMap<>();
+    private final Map<String, Project> allProjects = new LinkedHashMap<>();
+
+    @Getter
+    private final Map<Long, Task> allTasks = new LinkedHashMap<>();
+
+    @Getter
+    private final Map<LocalDate, List<Long>> deadlinesWithTaskIds = new TreeMap<>();
+
+    @Getter
+    private final List<Long> allTasksIdsWithoutDeadlines = new ArrayList<>();
+
     private long lastTaskId = 0;
 
     public void addProject(String name) {
         Project newProject = new Project(name, new ArrayList<>());
-        projectsWithTasks.put(name, newProject);
+        allProjects.put(name, newProject);
     }
 
     private Optional<Project> getProjectByName(String name) {
-        if (projectsWithTasks.containsKey(name)) {
-            return Optional.of(projectsWithTasks.get(name));
-        }
-        return Optional.empty();
+        return Optional.ofNullable(allProjects.get(name));
     }
 
     /***
@@ -42,17 +48,18 @@ public class ProjectsStorage {
         Project foundProject = optionalProject.get();
 
         long taskId = nextTaskId();
-        Task newTask = new Task(taskId, taskDescription, false);
+        Task newTask = new Task(taskId, taskDescription, false, null, foundProject);
         foundProject.addTask(newTask);
 
-        tasks.put(taskId, newTask);
+        allTasks.put(taskId, newTask);
+        allTasksIdsWithoutDeadlines.add(taskId);
 
         return optionalProject;
     }
 
     private Optional<Task> getTaskById(long taskId) {
-        if (tasks.containsKey(taskId)) {
-            return Optional.of(tasks.get(taskId));
+        if (allTasks.containsKey(taskId)) {
+            return Optional.of(allTasks.get(taskId));
         }
         return Optional.empty();
     }
@@ -70,15 +77,59 @@ public class ProjectsStorage {
     }
 
     /***
-     * Method to change "deadline" property in a task.
+     * Method to change "newDeadline" property in a task.
      * @param taskId the ID of the ask that has to be updated.
-     * @param deadline the value that has to be put into a task.
+     * @param newDeadline the value that has to be put into a task.
      * @return an update task wrapped in Optional. If the task is not found, empty Optional is returned.
      */
-    public Optional<Task> updateDeadlineValueInTask(long taskId, LocalDate deadline) {
+    public Optional<Task> updateDeadlineValueInTask(long taskId, LocalDate newDeadline) {
         Optional<Task> optionalTask = getTaskById(taskId);
-        optionalTask.ifPresent(task -> task.setDeadline(deadline));
+
+        optionalTask.ifPresent(task -> {
+            LocalDate oldDeadline = task.getDeadline();
+            task.setDeadline(newDeadline);
+
+            // Remove from old deadline cache if it exists
+            if (oldDeadline != null) {
+                removeTaskIdFromDeadlineCache(taskId, oldDeadline);
+            } else {
+                allTasksIdsWithoutDeadlines.remove(taskId); // previously without deadline
+            }
+
+            // Add to new deadline cache or "no deadline" list
+            if (newDeadline != null) {
+                List<Long> tasks = deadlinesWithTaskIds.getOrDefault(newDeadline, new ArrayList<>());
+                tasks.add(taskId);
+                deadlinesWithTaskIds.put(newDeadline, tasks);
+            } else {
+                allTasksIdsWithoutDeadlines.add(taskId);
+            }
+        });
+
         return optionalTask;
+    }
+
+
+    private void removeTaskIdFromDeadlineCache(long taskId, LocalDate oldDeadline) {
+        List<Long> oldList = deadlinesWithTaskIds.get(oldDeadline);
+        if (oldList != null) {
+            oldList.remove(taskId);
+            if (oldList.isEmpty()) {
+                deadlinesWithTaskIds.remove(oldDeadline);
+            }
+        }
+    }
+
+    private void updateCacheWithDeadlines(LocalDate deadline, long taskId) {
+        List<Long> tasks = deadlinesWithTaskIds.getOrDefault(deadline, new ArrayList<>());
+        tasks.add(taskId);
+        deadlinesWithTaskIds.put(deadline, tasks);
+    }
+
+    private void removeTaskFromDeadlineCache(long taskId) {
+        for (List<Long> taskList : deadlinesWithTaskIds.values()) {
+            taskList.remove(taskId);
+        }
     }
 
     private long nextTaskId() {
