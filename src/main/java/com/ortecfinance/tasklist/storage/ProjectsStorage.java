@@ -57,11 +57,13 @@ public class ProjectsStorage {
         return optionalProject;
     }
 
+    /***
+     * Method to get a Task object by its ID.
+     * @param taskId the required ID to find a task.
+     * @return a task wrapped in Optional. If the task is not found, empty Optional is returned.
+     */
     private Optional<Task> getTaskById(long taskId) {
-        if (allTasks.containsKey(taskId)) {
-            return Optional.of(allTasks.get(taskId));
-        }
-        return Optional.empty();
+        return Optional.ofNullable(allTasks.get(taskId));
     }
 
     /***
