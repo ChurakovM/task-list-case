@@ -79,7 +79,7 @@ public class ConsoleInputOutput {
 
     public void showProjectsAndTasksBasedOnDeadline(Map<Long, Task> allTasks,
                                                     Map<LocalDate, List<Long>> deadlinesWithTaskIds,
-                                                    List<Long> tasksWithoutDeadline) {
+                                                    Set<Long> tasksWithoutDeadline) {
         if (allTasks == null || allTasks.isEmpty()) {
             out.println("No tasks in the system.");
             return;
@@ -105,7 +105,7 @@ public class ConsoleInputOutput {
         }
     }
 
-    private Map<String, List<Task>> groupTasksByProject(List<Long> taskIds, Map<Long, Task> allTasks) {
+    private Map<String, List<Task>> groupTasksByProject(Collection<Long> taskIds, Map<Long, Task> allTasks) {
         Map<String, List<Task>> tasksByProject = new LinkedHashMap<>();
 
         for (Long taskId : taskIds) {

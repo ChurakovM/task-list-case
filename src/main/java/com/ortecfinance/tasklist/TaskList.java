@@ -12,10 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.ortecfinance.tasklist.utils.DeadlineUtils.parseString;
 
@@ -155,14 +152,14 @@ public final class TaskList implements Runnable {
 
     private void today() {
         Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIds();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
         consoleInputOutput.showProjectsAndTasksForToday(allTasks, deadlinesWithTaskIds);
     }
 
     private void viewByDeadline() {
         Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIds();
-        List<Long> tasksWithoutDeadline = projectsStorage.getAllTasksIdsWithoutDeadlines();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
+        Set<Long> tasksWithoutDeadline = projectsStorage.getAllTasksIdsWithoutDeadlinesCache();
         consoleInputOutput.showProjectsAndTasksBasedOnDeadline(allTasks, deadlinesWithTaskIds, tasksWithoutDeadline);
     }
 }

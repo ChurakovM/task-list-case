@@ -16,10 +16,10 @@ public class ProjectsStorage {
     private final Map<Long, Task> allTasks = new LinkedHashMap<>();
 
     @Getter
-    private final Map<LocalDate, List<Long>> deadlinesWithTaskIds = new TreeMap<>();
+    private final Map<LocalDate, List<Long>> deadlinesWithTaskIdsCache = new TreeMap<>();
 
     @Getter
-    private final List<Long> allTasksIdsWithoutDeadlines = new ArrayList<>();
+    private final Set<Long> allTasksIdsWithoutDeadlinesCache = new LinkedHashSet<>();
 
     private long lastTaskId = 0;
 
@@ -52,7 +52,7 @@ public class ProjectsStorage {
         foundProject.addTask(newTask);
 
         allTasks.put(taskId, newTask);
-        allTasksIdsWithoutDeadlines.add(taskId);
+        allTasksIdsWithoutDeadlinesCache.add(taskId);
 
         return optionalProject;
     }
@@ -95,16 +95,16 @@ public class ProjectsStorage {
             if (oldDeadline != null) {
                 removeTaskIdFromDeadlineCache(taskId, oldDeadline);
             } else {
-                allTasksIdsWithoutDeadlines.remove(taskId); // previously without deadline
+                allTasksIdsWithoutDeadlinesCache.remove(taskId); // previously without deadline
             }
 
             // Add to new deadline cache or "no deadline" list
             if (newDeadline != null) {
-                List<Long> tasks = deadlinesWithTaskIds.getOrDefault(newDeadline, new ArrayList<>());
+                List<Long> tasks = deadlinesWithTaskIdsCache.getOrDefault(newDeadline, new ArrayList<>());
                 tasks.add(taskId);
-                deadlinesWithTaskIds.put(newDeadline, tasks);
+                deadlinesWithTaskIdsCache.put(newDeadline, tasks);
             } else {
-                allTasksIdsWithoutDeadlines.add(taskId);
+                allTasksIdsWithoutDeadlinesCache.add(taskId);
             }
         });
 
@@ -113,11 +113,11 @@ public class ProjectsStorage {
 
 
     private void removeTaskIdFromDeadlineCache(long taskId, LocalDate oldDeadline) {
-        List<Long> oldList = deadlinesWithTaskIds.get(oldDeadline);
+        List<Long> oldList = deadlinesWithTaskIdsCache.get(oldDeadline);
         if (oldList != null) {
             oldList.remove(taskId);
             if (oldList.isEmpty()) {
-                deadlinesWithTaskIds.remove(oldDeadline);
+                deadlinesWithTaskIdsCache.remove(oldDeadline);
             }
         }
     }
