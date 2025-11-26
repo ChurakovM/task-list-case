@@ -46,7 +46,9 @@ public class ConsoleOutput {
         out.println();
     }
 
-    public void showProjectsAndTasks(Collection<Project> projects) {
+    public void showProjectsAndTasks() {
+        Collection<Project> projects = projectsStorage.getAllProjects().values();
+
         for (Project project : projects) {
             out.println(project.getName());
             for (Task task : project.getTasks()) {
@@ -115,6 +117,7 @@ public class ConsoleOutput {
             for (Task task : projectEntry.getValue()) {
                 out.printf("        %d: %s%n", task.getId(), task.getDescription());
             }
+            out.println();
         }
     }
 }

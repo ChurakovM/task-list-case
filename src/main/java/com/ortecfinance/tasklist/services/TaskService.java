@@ -20,8 +20,7 @@ public class TaskService {
     private final ConsoleOutput consoleOutput;
 
     public void showAllProjects() {
-        Collection<Project> projects = projectsStorage.getAllProjects().values();
-        consoleOutput.showProjectsAndTasks(projects);
+        consoleOutput.showProjectsAndTasks();
     }
 
     public void addProject(String name) {

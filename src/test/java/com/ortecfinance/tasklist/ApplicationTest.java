@@ -20,7 +20,7 @@ public final class ApplicationTest {
     private final PipedInputStream outStream = new PipedInputStream();
     private final BufferedReader outReader = new BufferedReader(new InputStreamReader(outStream));
 
-    private Thread applicationThread;
+    private final Thread applicationThread;
 
     public ApplicationTest() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(new PipedInputStream(inStream)));
@@ -67,8 +67,8 @@ public final class ApplicationTest {
         execute("show");
         readLines(
             "secrets",
-            "    [ ] 1: Eat more donuts.",
-            "    [ ] 2: Destroy all humans.",
+            "    [ ] 1: Eat more donuts. (deadline: no deadline)",
+            "    [ ] 2: Destroy all humans. (deadline: no deadline)",
             ""
         );
 
@@ -88,16 +88,16 @@ public final class ApplicationTest {
         execute("show");
         readLines(
                 "secrets",
-                "    [x] 1: Eat more donuts.",
-                "    [ ] 2: Destroy all humans.",
+                "    [x] 1: Eat more donuts. (deadline: no deadline)",
+                "    [ ] 2: Destroy all humans. (deadline: no deadline)",
                 "",
                 "training",
-                "    [x] 3: Four Elements of Simple Design",
-                "    [ ] 4: SOLID",
-                "    [x] 5: Coupling and Cohesion",
-                "    [x] 6: Primitive Obsession",
-                "    [ ] 7: Outside-In TDD",
-                "    [ ] 8: Interaction-Driven Design",
+                "    [x] 3: Four Elements of Simple Design (deadline: no deadline)",
+                "    [ ] 4: SOLID (deadline: no deadline)",
+                "    [x] 5: Coupling and Cohesion (deadline: no deadline)",
+                "    [x] 6: Primitive Obsession (deadline: no deadline)",
+                "    [ ] 7: Outside-In TDD (deadline: no deadline)",
+                "    [ ] 8: Interaction-Driven Design (deadline: no deadline)",
                 ""
         );
 
@@ -113,7 +113,8 @@ public final class ApplicationTest {
         int length = expectedOutput.length();
         char[] buffer = new char[length];
         outReader.read(buffer, 0, length);
-        assertThat(String.valueOf(buffer), is(expectedOutput));
+        String actualOutput = String.valueOf(buffer);
+        assertThat(actualOutput, is(expectedOutput));
     }
 
     private void readLines(String... expectedOutput) throws IOException {
