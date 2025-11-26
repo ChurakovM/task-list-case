@@ -5,9 +5,15 @@ import com.ortecfinance.tasklist.services.TaskService;
 import com.ortecfinance.tasklist.storage.DeadlineCache;
 import com.ortecfinance.tasklist.storage.ProjectsStorage;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+import static com.ortecfinance.tasklist.utils.DeadlineUtils.DEFAULT_DATE_FORMAT;
+import static com.ortecfinance.tasklist.utils.DeadlineUtils.getDeadlineLabel;
 import static java.lang.System.lineSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -99,6 +105,54 @@ public final class ApplicationTest {
                 "    [ ] 7: Outside-In TDD (deadline: no deadline)",
                 "    [ ] 8: Interaction-Driven Design (deadline: no deadline)",
                 ""
+        );
+
+        execute("quit");
+    }
+
+    @Test
+    void it_works_with_deadlines() throws IOException {
+        execute("add project secrets");
+        execute("add task secrets Eat more donuts.");
+        execute("add task secrets Destroy all humans.");
+
+        String today = LocalDate.now().format(DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT));
+        execute("deadline 1 " + today);
+        String expectedDate2 = getDeadlineLabel(LocalDate.now().plusDays(1));
+        execute("deadline 2 " + expectedDate2);
+
+        execute("show");
+        readLines(
+                "secrets",
+                "    [ ] 1: Eat more donuts. (deadline: today)",
+                String.format("    [ ] 2: Destroy all humans. (deadline: %s)", expectedDate2),
+                ""
+        );
+
+        execute("add project training");
+        execute("add task training Four Elements of Simple Design");
+        execute("add task training SOLID");
+
+        String expectedDate3 = getDeadlineLabel(LocalDate.now().plusDays(2));
+        execute("deadline 3 " + expectedDate3);
+
+        execute("view-by-deadline");
+        readLines(
+                "today",
+                "    secrets:",
+                "        1: Eat more donuts.",
+                "",
+                expectedDate2,
+                "    secrets:",
+                "        2: Destroy all humans.",
+                "",
+                expectedDate3,
+                "    training:",
+                "        3: Four Elements of Simple Design",
+                "",
+                "No deadline:",
+                "    training:",
+                "        4: SOLID"
         );
 
         execute("quit");
