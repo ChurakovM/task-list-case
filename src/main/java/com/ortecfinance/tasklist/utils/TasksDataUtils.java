@@ -15,7 +15,7 @@ public class TasksDataUtils {
             Task task = allTasks.get(taskId);
             if (task != null) {
                 tasksByProject
-                        .computeIfAbsent(task.getProject().getName(), k -> new ArrayList<>())
+                        .computeIfAbsent(task.getProjectName(), k -> new ArrayList<>())
                         .add(task);
             }
         }

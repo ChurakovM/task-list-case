@@ -5,8 +5,6 @@ import com.ortecfinance.tasklist.services.TaskService;
 import com.ortecfinance.tasklist.storage.DeadlineCache;
 import com.ortecfinance.tasklist.storage.ProjectsStorage;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -35,7 +33,7 @@ public final class ApplicationTest {
         DeadlineCache deadlineCache = new DeadlineCache();
         ProjectsStorage storage = new ProjectsStorage(deadlineCache);
         ConsoleOutput consoleOutput = new ConsoleOutput(out, storage, deadlineCache);
-        TaskService taskService = new TaskService(storage, consoleOutput);
+        TaskService taskService = new TaskService(storage, consoleOutput, deadlineCache);
 
         TaskList taskList = new TaskList(taskService, consoleOutput, in, out);
         applicationThread = new Thread(taskList);

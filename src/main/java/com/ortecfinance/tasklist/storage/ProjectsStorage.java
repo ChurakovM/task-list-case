@@ -48,7 +48,7 @@ public class ProjectsStorage {
         Project foundProject = optionalProject.get();
 
         long taskId = nextTaskId();
-        Task newTask = new Task(taskId, taskDescription, false, null, foundProject);
+        Task newTask = new Task(taskId, taskDescription, false, null, projectName);
         foundProject.addTask(newTask);
 
         allTasks.put(taskId, newTask);

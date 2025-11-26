@@ -3,6 +3,7 @@ package com.ortecfinance.tasklist.services;
 import com.ortecfinance.tasklist.console.ConsoleOutput;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
+import com.ortecfinance.tasklist.storage.DeadlineCache;
 import com.ortecfinance.tasklist.storage.ProjectsStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,9 +19,26 @@ public class TaskService {
 
     private final ProjectsStorage projectsStorage;
     private final ConsoleOutput consoleOutput;
+    private final DeadlineCache deadlineCache;
 
     public void showAllProjects() {
         consoleOutput.showProjectsAndTasks();
+    }
+
+    public Map<String, Project> retrieveAllProjects() {
+        return projectsStorage.getAllProjects();
+    }
+
+    public Map<Long, Task> retrieveAllTasks() {
+        return projectsStorage.getAllTasks();
+    }
+
+    public Map<LocalDate, List<Long>> retrieveDeadlinesWithTaskIds() {
+        return deadlineCache.getDeadlinesWithTaskIdsCache();
+    }
+
+    public Set<Long> retrieveTasksWithoutDeadline() {
+        return deadlineCache.getAllTasksIdsWithoutDeadlinesCache();
     }
 
     public void addProject(String name) {
@@ -58,6 +76,10 @@ public class TaskService {
         long taskId = Long.parseLong(idString);
         LocalDate deadline = parseString(dateString);
 
+        updateDeadlineInTask(taskId, deadline);
+    }
+
+    public void updateDeadlineInTask(long taskId, LocalDate deadline) {
         Optional<Task> updatedTask =  projectsStorage.updateDeadlineValueInTask(taskId, deadline);
         if (updatedTask.isEmpty()) {
             consoleOutput.printTaskNotFoundById(taskId);
