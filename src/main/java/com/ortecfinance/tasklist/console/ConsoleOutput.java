@@ -3,8 +3,10 @@ package com.ortecfinance.tasklist.console;
 import com.ortecfinance.tasklist.commands.Commands;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import com.ortecfinance.tasklist.storage.DeadlineCache;
+import com.ortecfinance.tasklist.storage.ProjectsStorage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.io.PrintWriter;
 import java.time.LocalDate;
@@ -13,15 +15,13 @@ import java.util.*;
 import static com.ortecfinance.tasklist.utils.DeadlineUtils.getDeadlineLabel;
 import static com.ortecfinance.tasklist.utils.TasksDataUtils.groupTasksByProject;
 
-@Component
+@Service
+@RequiredArgsConstructor
 public class ConsoleOutput {
 
     private final PrintWriter out;
-
-    @Autowired
-    public ConsoleOutput(PrintWriter out) {
-        this.out = out;
-    }
+    private final ProjectsStorage projectsStorage;
+    private final DeadlineCache deadlineCache;
 
     public void help() {
         out.println("Commands:");
@@ -63,9 +63,9 @@ public class ConsoleOutput {
         }
     }
 
-    public void showProjectsAndTasksForToday(Map<Long, Task> allTasks,
-                                             Map<LocalDate, List<Long>> deadlinesWithTaskIds) {
-
+    public void showProjectsAndTasksForToday() {
+        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = deadlineCache.getDeadlinesWithTaskIdsCache();
         LocalDate today = LocalDate.now();
 
         // Check if there are tasks with today's deadline
@@ -79,9 +79,11 @@ public class ConsoleOutput {
         printTasksByProject(tasksByProject);
     }
 
-    public void showProjectsAndTasksBasedOnDeadline(Map<Long, Task> allTasks,
-                                                    Map<LocalDate, List<Long>> deadlinesWithTaskIds,
-                                                    Set<Long> tasksWithoutDeadline) {
+    public void showProjectsAndTasksBasedOnDeadline() {
+        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
+        Map<LocalDate, List<Long>> deadlinesWithTaskIds = deadlineCache.getDeadlinesWithTaskIdsCache();
+        Set<Long> tasksWithoutDeadline = deadlineCache.getAllTasksIdsWithoutDeadlinesCache();
+
         if (allTasks == null || allTasks.isEmpty()) {
             out.println("No tasks in the system.");
             return;

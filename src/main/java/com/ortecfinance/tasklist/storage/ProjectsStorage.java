@@ -3,12 +3,14 @@ package com.ortecfinance.tasklist.storage;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class ProjectsStorage {
 
     @Getter
@@ -17,11 +19,7 @@ public class ProjectsStorage {
     @Getter
     private final Map<Long, Task> allTasks = new LinkedHashMap<>();
 
-    @Getter
-    private final Map<LocalDate, List<Long>> deadlinesWithTaskIdsCache = new TreeMap<>();
-
-    @Getter
-    private final Set<Long> allTasksIdsWithoutDeadlinesCache = new LinkedHashSet<>();
+    private final DeadlineCache deadlineCache;
 
     private long lastTaskId = 0;
 
@@ -54,7 +52,7 @@ public class ProjectsStorage {
         foundProject.addTask(newTask);
 
         allTasks.put(taskId, newTask);
-        allTasksIdsWithoutDeadlinesCache.add(taskId);
+        deadlineCache.addNewTaskIdWithoutDeadline(taskId);
 
         return optionalProject;
     }
@@ -90,38 +88,11 @@ public class ProjectsStorage {
         Optional<Task> optionalTask = getTaskById(taskId);
 
         optionalTask.ifPresent(task -> {
-            LocalDate oldDeadline = task.getDeadline();
+            deadlineCache.updateCacheBasedOnDeadlineValue(task, newDeadline);
             task.setDeadline(newDeadline);
-
-            // Remove from old deadline cache if it exists
-            if (oldDeadline != null) {
-                removeTaskIdFromDeadlineCache(taskId, oldDeadline);
-            } else {
-                allTasksIdsWithoutDeadlinesCache.remove(taskId); // previously without deadline
-            }
-
-            // Add to new deadline cache or "no deadline" list
-            if (newDeadline != null) {
-                List<Long> tasks = deadlinesWithTaskIdsCache.getOrDefault(newDeadline, new ArrayList<>());
-                tasks.add(taskId);
-                deadlinesWithTaskIdsCache.put(newDeadline, tasks);
-            } else {
-                allTasksIdsWithoutDeadlinesCache.add(taskId);
-            }
         });
 
         return optionalTask;
-    }
-
-
-    private void removeTaskIdFromDeadlineCache(long taskId, LocalDate oldDeadline) {
-        List<Long> oldList = deadlinesWithTaskIdsCache.get(oldDeadline);
-        if (oldList != null) {
-            oldList.remove(taskId);
-            if (oldList.isEmpty()) {
-                deadlinesWithTaskIdsCache.remove(oldDeadline);
-            }
-        }
     }
 
     private long nextTaskId() {

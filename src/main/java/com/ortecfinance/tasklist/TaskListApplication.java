@@ -7,14 +7,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class TaskListApplication {
 
     public static void main(String[] args) {
+        SpringApplication app = new SpringApplication(TaskListApplication.class);
+        var context = app.run(args);
+
         if (args.length == 0) {
-            System.out.println("Starting console Application");
-            TaskList.startConsole();
-        }
-        else {
-            SpringApplication.run(TaskListApplication.class, args);
-            System.out.println("localhost:8080/tasks");
+            System.out.println("Starting console application...");
+            TaskList taskList = context.getBean(TaskList.class);
+            taskList.run();
+        } else {
+            System.out.println("API started at http://localhost:8080/tasks");
         }
     }
-
 }

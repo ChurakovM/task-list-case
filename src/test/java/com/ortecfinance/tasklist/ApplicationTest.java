@@ -1,5 +1,9 @@
 package com.ortecfinance.tasklist;
 
+import com.ortecfinance.tasklist.console.ConsoleOutput;
+import com.ortecfinance.tasklist.services.TaskService;
+import com.ortecfinance.tasklist.storage.DeadlineCache;
+import com.ortecfinance.tasklist.storage.ProjectsStorage;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
@@ -21,7 +25,13 @@ public final class ApplicationTest {
     public ApplicationTest() throws IOException {
         BufferedReader in = new BufferedReader(new InputStreamReader(new PipedInputStream(inStream)));
         PrintWriter out = new PrintWriter(new PipedOutputStream(outStream), true);
-        TaskList taskList = new TaskList(in, out);
+
+        DeadlineCache deadlineCache = new DeadlineCache();
+        ProjectsStorage storage = new ProjectsStorage(deadlineCache);
+        ConsoleOutput consoleOutput = new ConsoleOutput(out, storage, deadlineCache);
+        TaskService taskService = new TaskService(storage, consoleOutput);
+
+        TaskList taskList = new TaskList(taskService, consoleOutput, in, out);
         applicationThread = new Thread(taskList);
     }
 

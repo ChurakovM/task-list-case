@@ -4,6 +4,7 @@ import com.ortecfinance.tasklist.console.ConsoleOutput;
 import com.ortecfinance.tasklist.models.Project;
 import com.ortecfinance.tasklist.models.Task;
 import com.ortecfinance.tasklist.storage.ProjectsStorage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,15 +13,11 @@ import java.util.*;
 import static com.ortecfinance.tasklist.utils.DeadlineUtils.parseString;
 
 @Service
+@RequiredArgsConstructor
 public class TaskService {
 
     private final ProjectsStorage projectsStorage;
     private final ConsoleOutput consoleOutput;
-
-    public TaskService(ProjectsStorage projectsStorage, ConsoleOutput consoleOutput) {
-        this.projectsStorage = projectsStorage;
-        this.consoleOutput = consoleOutput;
-    }
 
     public void showAllProjects() {
         Collection<Project> projects = projectsStorage.getAllProjects().values();
@@ -69,15 +66,10 @@ public class TaskService {
     }
 
     public void viewTasksForToday() {
-        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
-        consoleOutput.showProjectsAndTasksForToday(allTasks, deadlinesWithTaskIds);
+        consoleOutput.showProjectsAndTasksForToday();
     }
 
     public void viewTasksByDeadline() {
-        Map<Long, Task> allTasks = projectsStorage.getAllTasks();
-        Map<LocalDate, List<Long>> deadlinesWithTaskIds = projectsStorage.getDeadlinesWithTaskIdsCache();
-        Set<Long> tasksWithoutDeadline = projectsStorage.getAllTasksIdsWithoutDeadlinesCache();
-        consoleOutput.showProjectsAndTasksBasedOnDeadline(allTasks, deadlinesWithTaskIds, tasksWithoutDeadline);
+        consoleOutput.showProjectsAndTasksBasedOnDeadline();
     }
 }

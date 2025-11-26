@@ -4,39 +4,23 @@ import com.ortecfinance.tasklist.commands.Commands;
 import com.ortecfinance.tasklist.commands.SubCommand;
 import com.ortecfinance.tasklist.console.ConsoleOutput;
 import com.ortecfinance.tasklist.services.TaskService;
-import com.ortecfinance.tasklist.storage.ProjectsStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public final class TaskList implements Runnable {
 
     private static final String QUIT = "quit";
+
     private final TaskService taskService;
     private final ConsoleOutput consoleOutput;
-    private BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-    private PrintWriter out = new PrintWriter(System.out);
-
-    public static void startConsole() {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-        PrintWriter out = new PrintWriter(System.out);
-        new TaskList(in, out).run();
-    }
-
-    public TaskList(BufferedReader reader, PrintWriter writer) {
-        this.in = reader;
-        this.out = writer;
-        consoleOutput = new ConsoleOutput(out);
-        ProjectsStorage projectsStorage = new ProjectsStorage();
-        taskService = new TaskService(projectsStorage, consoleOutput);
-    }
+    private final BufferedReader in;
+    private final PrintWriter out;
 
     public void run() {
         out.println("Welcome to TaskList! Type 'help' for available commands.");
