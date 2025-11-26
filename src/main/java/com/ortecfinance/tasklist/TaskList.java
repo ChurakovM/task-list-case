@@ -34,6 +34,7 @@ public final class TaskList implements Runnable {
                 throw new RuntimeException(e);
             }
             if (command.equals(QUIT)) {
+                System.exit(0);
                 break;
             }
             execute(command);
