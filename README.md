@@ -95,7 +95,14 @@ You can use these endpoints when the application is running in **REST API mode**
 
 ---
 
+## 🧪 Running Tests
+The project contains tests for both modes - console and REST API.
+
 ### ▶️ Run all tests via Maven
 ```bash
 mvn clean test
 ```
+
+### 🧠 Run individual test classes in your IDE
+You can also open any test class (e.g.,`ApplicationTest` or `ProjectControllerTest`)  
+and execute it directly from your IDE using the **Run Test** option.
