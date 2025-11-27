@@ -94,3 +94,8 @@ You can use these endpoints when the application is running in **REST API mode**
 | GET  | `/projects/view_by_deadline` | Get all tasks grouped by deadline | — |
 
 ---
+
+### ▶️ Run all tests via Maven
+```bash
+mvn clean test
+```

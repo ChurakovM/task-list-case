@@ -60,7 +60,7 @@ public final class ApplicationTest {
         throw new IllegalStateException("The application is still running.");
     }
 
-    @Test
+    @Test()
     void it_works() throws IOException {
         execute("show");
 
